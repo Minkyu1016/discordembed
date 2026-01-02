@@ -56,6 +56,9 @@ button {
   gap:15px;
   margin-bottom:10px;
 }
+.hidden {
+  display:none;
+}
 </style>
 </head>
 
@@ -71,19 +74,24 @@ button {
       <label><input type="radio" name="mode" value="message"> Message</label>
     </div>
 
-    <input id="title" placeholder="Embed Title">
-    <textarea id="description" placeholder="Embed Description"></textarea>
-    <input id="image" placeholder="Embed Image URL">
+    <!-- Embed 설정 -->
+    <div id="embedSettings">
+      <input id="title" placeholder="Embed Title">
+      <textarea id="description" placeholder="Embed Description"></textarea>
+      <input id="image" placeholder="Embed Image URL">
+      <button id="colorBtn">Choose Color</button>
+    </div>
 
-    <button id="colorBtn">Choose Color</button>
-
-    <textarea id="message" placeholder="Plain message (no embed)"></textarea>
+    <!-- Message 설정 -->
+    <div id="messageSettings" class="hidden">
+      <textarea id="message" placeholder="Plain message (no embed)"></textarea>
+    </div>
 
     <button onclick="send()">Send</button>
   </div>
 
   <!-- 미리보기 -->
-  <div class="embed">
+  <div class="embed" id="preview">
     <div class="embed-title" id="pTitle">Title</div>
     <div id="pDesc">Description</div>
     <div class="embed-image" id="pImg"></div>
@@ -99,9 +107,20 @@ function updatePreview() {
   pDesc.innerText = description.value || "Description";
   pImg.innerHTML = image.value ? `<img src="${image.value}">` : "";
 }
-document.querySelectorAll("input, textarea")
+document.querySelectorAll("#embedSettings input, #embedSettings textarea")
   .forEach(el => el.oninput = updatePreview);
 
+// 모드 전환
+document.querySelectorAll('input[name="mode"]').forEach(radio => {
+  radio.onchange = () => {
+    const isEmbed = radio.value === "embed" && radio.checked;
+    embedSettings.classList.toggle("hidden", !isEmbed);
+    messageSettings.classList.toggle("hidden", isEmbed);
+    preview.style.display = isEmbed ? "block" : "none";
+  };
+});
+
+// 컬러 피커
 const pickr = Pickr.create({
   el: '#colorBtn',
   theme: 'nano',
@@ -120,8 +139,8 @@ const pickr = Pickr.create({
 
 pickr.on('save', (color) => {
   selectedColor = color.toHEXA().toString().replace("#", "");
-  document.getElementById("colorBtn").style.background = "#" + selectedColor;
-  document.querySelector(".embed").style.borderLeftColor = "#" + selectedColor;
+  colorBtn.style.background = "#" + selectedColor;
+  preview.style.borderLeftColor = "#" + selectedColor;
   pickr.hide();
 });
 
@@ -134,11 +153,11 @@ async function send() {
     body: JSON.stringify({
       mode,
       webhook: webhook.value,
-      title: title.value,
-      description: description.value,
-      image: image.value,
+      title: title?.value,
+      description: description?.value,
+      image: image?.value,
       color: selectedColor,
-      message: message.value
+      message: message?.value
     })
   });
 
