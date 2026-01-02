@@ -1,137 +1,131 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>Discord Embed Creator</title>
-
-<!-- Pickr (Color Picker) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
-
-<style>
-body {
-  background:#0f0f14;
-  color:#fff;
-  font-family: Arial, sans-serif;
-  display:flex;
-  justify-content:center;
-  padding:40px;
-}
-.container {
-  display:grid;
-  grid-template-columns: 360px 360px;
-  gap:30px;
-}
-input, textarea, button {
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  background:#1e1e2e;
-  border:1px solid #333;
-  color:#fff;
-  border-radius:6px;
-}
-button {
-  background:#5865f2;
-  cursor:pointer;
-  font-weight:bold;
-  border:none;
-}
-.embed {
-  background:#2b2d31;
-  border-left:4px solid #5865f2;
-  padding:12px;
-  border-radius:6px;
-}
-.embed-title {
-  font-weight:bold;
-  margin-bottom:6px;
-}
-.embed-image img {
-  max-width:100%;
-  border-radius:4px;
-  margin-top:10px;
-}
-#colorBtn {
-  background:#5865f2;
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-
-  <!-- 입력 -->
-  <div>
-    <input id="webhook" placeholder="Webhook URL">
-    <input id="title" placeholder="Title">
-    <textarea id="description" placeholder="Description"></textarea>
-    <input id="image" placeholder="Image URL">
-
-    <button id="colorBtn">Choose Color</button>
-    <button onclick="send()">Send Embed</button>
-  </div>
-
-  <!-- 미리보기 -->
-  <div class="embed">
-    <div class="embed-title" id="pTitle">Title</div>
-    <div id="pDesc">Description</div>
-    <div class="embed-image" id="pImg"></div>
-  </div>
-
-</div>
-
-<script>
-let selectedColor = "5865F2";
-
-function updatePreview() {
-  pTitle.innerText = title.value || "Title";
-  pDesc.innerText = description.value || "Description";
-  pImg.innerHTML = image.value ? `<img src="${image.value}">` : "";
-}
-document.querySelectorAll("input, textarea")
-  .forEach(el => el.oninput = updatePreview);
-
-// Pickr 컬러피커
-const pickr = Pickr.create({
-  el: '#colorBtn',
-  theme: 'nano',
-  default: '#5865F2',
-  components: {
-    preview: true,
-    opacity: false,
-    hue: true,
-    interaction: {
-      hex: true,
-      input: true,
-      save: true
+  <meta charset="UTF-8" />
+  <title>Discord Embed Sender</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f0f14;
+      color: white;
+      padding: 20px;
     }
-  }
-});
+    .input-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 8px;
+      background: #1e1e2e;
+      border: none;
+      color: white;
+      border-radius: 5px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    button {
+      cursor: pointer;
+      background: #5865f2;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
 
-pickr.on('save', (color) => {
-  selectedColor = color.toHEXA().toString().replace("#", "");
-  document.getElementById("colorBtn").style.background = "#" + selectedColor;
-  document.querySelector(".embed").style.borderLeftColor = "#" + selectedColor;
-  pickr.hide();
-});
+  <h2>Discord Webhook Sender</h2>
 
-// 전송
-async function send() {
-  await fetch("/api/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      webhook: webhook.value,
-      title: title.value,
-      description: description.value,
-      image: image.value,
-      color: selectedColor
-    })
-  });
-  alert("전송됨");
-}
-</script>
+  <div class="input-group">
+    <label>Webhook URL</label>
+    <input id="webhook" placeholder="https://discord.com/api/webhooks/..." />
+  </div>
+
+  <!-- 일반 채팅 -->
+  <div class="input-group">
+    <label>일반 채팅 메시지 (content)</label>
+    <textarea
+      id="content"
+      placeholder="임베드와 함께 또는 단독으로 보낼 메시지"
+    ></textarea>
+  </div>
+
+  <!-- Embed -->
+  <div class="input-group">
+    <label>Embed Title</label>
+    <input id="title" />
+  </div>
+
+  <div class="input-group">
+    <label>Embed Description</label>
+    <textarea id="description"></textarea>
+  </div>
+
+  <div class="input-group">
+    <label>Embed Color (HEX)</label>
+    <input id="color" placeholder="#5865F2" value="#5865F2" />
+  </div>
+
+  <button onclick="sendWebhook()">전송하기</button>
+
+  <script>
+    async function sendWebhook() {
+      const webhookUrl = document.getElementById("webhook").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const colorInput = document.getElementById("color").value.trim();
+
+      if (!webhookUrl) {
+        alert("Webhook URL을 입력하세요.");
+        return;
+      }
+
+      const payload = {};
+
+      // 일반 채팅
+      if (content !== "") {
+        payload.content = content;
+      }
+
+      // 임베드 (비어있지 않을 때만)
+      if (title || description) {
+        payload.embeds = [
+          {
+            title: title || undefined,
+            description: description || undefined,
+            color: parseInt(colorInput.replace("#", ""), 16)
+          }
+        ];
+      }
+
+      if (!payload.content && !payload.embeds) {
+        alert("보낼 내용이 없습니다.");
+        return;
+      }
+
+      try {
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("전송 실패");
+
+        alert("전송 성공!");
+      } catch (err) {
+        console.error(err);
+        alert("웹훅 전송 오류");
+      }
+    }
+  </script>
 
 </body>
 </html>
