@@ -15,6 +15,7 @@ export default function handler(req, res) {
   store.set(id, req.body);
 
   res.json({
-    url: `${req.headers.origin}/e/${id}`
+    url: `${req.headers.origin}/api/e/${id}`
   });
 }
+
