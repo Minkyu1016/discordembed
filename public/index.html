@@ -20,9 +20,11 @@ body {
   display:grid;
   grid-template-columns: 360px 360px;
   gap:30px;
+  align-items:flex-start;
 }
 input, textarea, button {
   width:100%;
+  box-sizing:border-box;
   padding:10px;
   margin-bottom:10px;
   background:#1e1e2e;
@@ -35,6 +37,14 @@ button {
   font-weight:bold;
   border:none;
   cursor:pointer;
+}
+.mode {
+  display:flex;
+  gap:15px;
+  margin-bottom:10px;
+}
+.hidden {
+  display:none;
 }
 .embed {
   background:#2b2d31;
@@ -51,13 +61,8 @@ button {
   border-radius:4px;
   margin-top:10px;
 }
-.mode {
-  display:flex;
-  gap:15px;
-  margin-bottom:10px;
-}
-.hidden {
-  display:none;
+.send-btn {
+  margin-top:6px;
 }
 </style>
 </head>
@@ -65,7 +70,6 @@ button {
 <body>
 <div class="container">
 
-  <!-- 입력 -->
   <div>
     <input id="webhook" placeholder="Webhook URL">
 
@@ -74,7 +78,6 @@ button {
       <label><input type="radio" name="mode" value="message"> Message</label>
     </div>
 
-    <!-- Embed 설정 -->
     <div id="embedSettings">
       <input id="title" placeholder="Embed Title">
       <textarea id="description" placeholder="Embed Description"></textarea>
@@ -82,15 +85,13 @@ button {
       <button id="colorBtn">Choose Color</button>
     </div>
 
-    <!-- Message 설정 -->
     <div id="messageSettings" class="hidden">
       <textarea id="message" placeholder="Plain message (no embed)"></textarea>
     </div>
 
-    <button onclick="send()">Send</button>
+    <button class="send-btn" onclick="send()">Send</button>
   </div>
 
-  <!-- 미리보기 -->
   <div class="embed" id="preview">
     <div class="embed-title" id="pTitle">Title</div>
     <div id="pDesc">Description</div>
@@ -110,17 +111,15 @@ function updatePreview() {
 document.querySelectorAll("#embedSettings input, #embedSettings textarea")
   .forEach(el => el.oninput = updatePreview);
 
-// 모드 전환
 document.querySelectorAll('input[name="mode"]').forEach(radio => {
   radio.onchange = () => {
-    const isEmbed = radio.value === "embed" && radio.checked;
-    embedSettings.classList.toggle("hidden", !isEmbed);
-    messageSettings.classList.toggle("hidden", isEmbed);
-    preview.style.display = isEmbed ? "block" : "none";
+    const embed = radio.value === "embed" && radio.checked;
+    embedSettings.classList.toggle("hidden", !embed);
+    messageSettings.classList.toggle("hidden", embed);
+    preview.style.display = embed ? "block" : "none";
   };
 });
 
-// 컬러 피커
 const pickr = Pickr.create({
   el: '#colorBtn',
   theme: 'nano',
