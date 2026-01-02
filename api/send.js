@@ -1,5 +1,7 @@
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
+  if (req.method !== "POST") {
+    return res.status(405).end();
+  }
 
   const { webhook, title, description, image, color } = req.body;
 
@@ -10,7 +12,7 @@ export default async function handler(req, res) {
       embeds: [{
         title,
         description,
-        color: parseInt(color || "5865F2", 16),
+        color: parseInt(color, 16),
         image: image ? { url: image } : undefined
       }]
     })
