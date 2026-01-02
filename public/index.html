@@ -1,0 +1,17 @@
+<script>
+async function create() {
+  const res = await fetch("/api/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: title.value,
+      description: description.value,
+      image: image.value,
+      color: color.value
+    })
+  });
+
+  const data = await res.json();
+  result.innerHTML = data.url;
+}
+</script>
