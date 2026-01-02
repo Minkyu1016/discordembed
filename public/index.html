@@ -2,9 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Discord Embed Creator</title>
+<title>Discord Message / Embed Sender</title>
 
-<!-- Pickr (Color Picker) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
 
@@ -33,9 +32,9 @@ input, textarea, button {
 }
 button {
   background:#5865f2;
-  cursor:pointer;
   font-weight:bold;
   border:none;
+  cursor:pointer;
 }
 .embed {
   background:#2b2d31;
@@ -52,8 +51,10 @@ button {
   border-radius:4px;
   margin-top:10px;
 }
-#colorBtn {
-  background:#5865f2;
+.mode {
+  display:flex;
+  gap:15px;
+  margin-bottom:10px;
 }
 </style>
 </head>
@@ -64,12 +65,21 @@ button {
   <!-- 입력 -->
   <div>
     <input id="webhook" placeholder="Webhook URL">
-    <input id="title" placeholder="Title">
-    <textarea id="description" placeholder="Description"></textarea>
-    <input id="image" placeholder="Image URL">
+
+    <div class="mode">
+      <label><input type="radio" name="mode" value="embed" checked> Embed</label>
+      <label><input type="radio" name="mode" value="message"> Message</label>
+    </div>
+
+    <input id="title" placeholder="Embed Title">
+    <textarea id="description" placeholder="Embed Description"></textarea>
+    <input id="image" placeholder="Embed Image URL">
 
     <button id="colorBtn">Choose Color</button>
-    <button onclick="send()">Send Embed</button>
+
+    <textarea id="message" placeholder="Plain message (no embed)"></textarea>
+
+    <button onclick="send()">Send</button>
   </div>
 
   <!-- 미리보기 -->
@@ -92,7 +102,6 @@ function updatePreview() {
 document.querySelectorAll("input, textarea")
   .forEach(el => el.oninput = updatePreview);
 
-// Pickr 컬러피커
 const pickr = Pickr.create({
   el: '#colorBtn',
   theme: 'nano',
@@ -116,19 +125,23 @@ pickr.on('save', (color) => {
   pickr.hide();
 });
 
-// 전송
 async function send() {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+
   await fetch("/api/send", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      mode,
       webhook: webhook.value,
       title: title.value,
       description: description.value,
       image: image.value,
-      color: selectedColor
+      color: selectedColor,
+      message: message.value
     })
   });
+
   alert("전송됨");
 }
 </script>
