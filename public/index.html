@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Discord Embed Creator</title>
+<style>
+body {
+  background:#0f0f14;
+  color:#fff;
+  font-family: Arial, sans-serif;
+  display:flex;
+  justify-content:center;
+  padding:40px;
+}
+.container {
+  display:grid;
+  grid-template-columns: 360px 360px;
+  gap:30px;
+}
+input, textarea, button {
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  background:#1e1e2e;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:6px;
+}
+button {
+  background:#5865f2;
+  cursor:pointer;
+  font-weight:bold;
+}
+.embed {
+  background:#2b2d31;
+  border-left:4px solid #5865f2;
+  padding:12px;
+  border-radius:6px;
+}
+.embed-title {
+  font-weight:bold;
+  margin-bottom:6px;
+}
+.embed-image img {
+  max-width:100%;
+  border-radius:4px;
+  margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div>
+    <input id="webhook" placeholder="Webhook URL">
+    <input id="title" placeholder="Title">
+    <textarea id="description" placeholder="Description"></textarea>
+    <input id="image" placeholder="Image URL">
+    <input id="color" placeholder="Color (hex, 예: 5865F2)">
+    <button onclick="send()">Send Embed</button>
+  </div>
+
+  <div class="embed">
+    <div class="embed-title" id="pTitle">Title</div>
+    <div id="pDesc">Description</div>
+    <div class="embed-image" id="pImg"></div>
+  </div>
+</div>
+
+<script>
+function updatePreview() {
+  pTitle.innerText = title.value || "Title";
+  pDesc.innerText = description.value || "Description";
+  pImg.innerHTML = image.value ? `<img src="${image.value}">` : "";
+}
+document.querySelectorAll("input, textarea")
+  .forEach(el => el.oninput = updatePreview);
+
+async function send() {
+  await fetch("/api/send", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      webhook: webhook.value,
+      title: title.value,
+      description: description.value,
+      image: image.value,
+      color: color.value
+    })
+  });
+  alert("전송됨");
+}
+</script>
+
+</body>
+</html>
