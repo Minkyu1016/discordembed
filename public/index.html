@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Discord Embed Creator</title>
+
+<!-- Pickr (Color Picker) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+
 <style>
 body {
   background:#0f0f14;
@@ -30,6 +35,7 @@ button {
   background:#5865f2;
   cursor:pointer;
   font-weight:bold;
+  border:none;
 }
 .embed {
   background:#2b2d31;
@@ -46,28 +52,38 @@ button {
   border-radius:4px;
   margin-top:10px;
 }
+#colorBtn {
+  background:#5865f2;
+}
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
+
+  <!-- 입력 -->
   <div>
     <input id="webhook" placeholder="Webhook URL">
     <input id="title" placeholder="Title">
     <textarea id="description" placeholder="Description"></textarea>
     <input id="image" placeholder="Image URL">
-    <input id="color" placeholder="Color (hex, 예: 5865F2)">
+
+    <button id="colorBtn">Choose Color</button>
     <button onclick="send()">Send Embed</button>
   </div>
 
+  <!-- 미리보기 -->
   <div class="embed">
     <div class="embed-title" id="pTitle">Title</div>
     <div id="pDesc">Description</div>
     <div class="embed-image" id="pImg"></div>
   </div>
+
 </div>
 
 <script>
+let selectedColor = "5865F2";
+
 function updatePreview() {
   pTitle.innerText = title.value || "Title";
   pDesc.innerText = description.value || "Description";
@@ -76,16 +92,41 @@ function updatePreview() {
 document.querySelectorAll("input, textarea")
   .forEach(el => el.oninput = updatePreview);
 
+// Pickr 컬러피커
+const pickr = Pickr.create({
+  el: '#colorBtn',
+  theme: 'nano',
+  default: '#5865F2',
+  components: {
+    preview: true,
+    opacity: false,
+    hue: true,
+    interaction: {
+      hex: true,
+      input: true,
+      save: true
+    }
+  }
+});
+
+pickr.on('save', (color) => {
+  selectedColor = color.toHEXA().toString().replace("#", "");
+  document.getElementById("colorBtn").style.background = "#" + selectedColor;
+  document.querySelector(".embed").style.borderLeftColor = "#" + selectedColor;
+  pickr.hide();
+});
+
+// 전송
 async function send() {
   await fetch("/api/send", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       webhook: webhook.value,
       title: title.value,
       description: description.value,
       image: image.value,
-      color: color.value
+      color: selectedColor
     })
   });
   alert("전송됨");
