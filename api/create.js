@@ -1,14 +1,19 @@
 export default function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).end();
-  }
+  if (req.method !== "POST") return res.status(405).end();
 
-  const id = Math.random().toString(36).slice(2, 6);
+  const data = {
+    title: req.body.title || "",
+    description: req.body.description || "",
+    image: req.body.image || "",
+    color: /^[0-9a-fA-F]{6}$/.test(req.body.color)
+      ? req.body.color
+      : "5865F2"
+  };
 
-  global.embeds ||= {};
-  global.embeds[id] = req.body;
+  const encoded = Buffer.from(JSON.stringify(data))
+    .toString("base64url");
 
   res.json({
-    url: `${req.headers.origin}/api/e/${id}`
+    url: `${req.headers.origin}/api/e/${encoded}`
   });
 }
