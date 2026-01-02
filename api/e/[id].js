@@ -1,30 +1,30 @@
-const store = global.store ?? (global.store = new Map());
+const esc = (s = "") =>
+  s.replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
 
 export default function handler(req, res) {
-  const { id } = req.query;
-  const e = store.get(id);
+  const e = global.embeds?.[req.query.id];
+  if (!e) return res.status(404).send("Not found");
 
-  if (!e) {
-    return res.status(404).send("Not Found");
-  }
+  const color =
+    /^[0-9a-fA-F]{6}$/.test(e.color) ? e.color : "5865F2";
 
   res.setHeader("Content-Type", "text/html");
-  res.send(`
-<!DOCTYPE html>
+  res.send(`<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta property="og:title" content="${esc(e.title)}">
 <meta property="og:description" content="${esc(e.description)}">
-${e.image ? `<meta property="og:image" content="${e.image}">` : ""}
-<meta name="theme-color" content="#${e.color || "5865F2"}">
+<meta property="og:image" content="${e.image || "https://discord.com/assets/847541504914fd33810e70a0ea73177e.ico"}">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#${color}">
 </head>
 <body></body>
-</html>
-`);
-}
-
-function esc(s = "") {
-  return s.replace(/"/g, "&quot;");
+</html>`);
 }
