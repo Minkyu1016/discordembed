@@ -21,7 +21,7 @@ body {
   display:grid;
   grid-template-columns: 360px 360px;
   gap:30px;
-  align-items:stretch;
+  align-items:flex-start;
 }
 
 input, textarea, button {
@@ -52,18 +52,9 @@ button {
   display:none;
 }
 
-.left {
-  display:flex;
-  flex-direction:column;
-}
-
-.send-btn {
-  margin-top:auto;
-}
-
 .embed {
   background:#2b2d31;
-  border-left:4px solid #5865f2; /* 기본값 */
+  border-left:4px solid #5865f2;
   padding:12px;
   border-radius:6px;
 }
@@ -78,14 +69,20 @@ button {
   border-radius:4px;
   margin-top:10px;
 }
+
+/* 🔧 Send 버튼 정렬 고정 */
+.send-btn {
+  width:100%;
+  box-sizing:border-box;
+  margin-top:6px;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-  <!-- LEFT -->
-  <div class="left">
+  <div>
     <input id="webhook" placeholder="Webhook URL">
 
     <div class="mode">
@@ -104,7 +101,7 @@ button {
 
     <!-- Message -->
     <div id="messageSettings" class="hidden">
-      <textarea id="message" placeholder="Plain message"></textarea>
+      <textarea id="message" placeholder="Plain message (no embed)"></textarea>
     </div>
 
     <!-- Reply -->
@@ -116,7 +113,6 @@ button {
     <button class="send-btn" onclick="send()">Send</button>
   </div>
 
-  <!-- PREVIEW -->
   <div class="embed" id="preview">
     <div class="embed-title" id="pTitle">Title</div>
     <div id="pDesc">Description</div>
@@ -140,6 +136,7 @@ document.querySelectorAll("#embedSettings input, #embedSettings textarea")
 document.querySelectorAll('input[name="mode"]').forEach(radio => {
   radio.onchange = () => {
     const mode = radio.value;
+
     embedSettings.classList.toggle("hidden", mode !== "embed");
     messageSettings.classList.toggle("hidden", mode !== "message");
     replySettings.classList.toggle("hidden", mode !== "reply");
@@ -147,7 +144,6 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
   };
 });
 
-/* COLOR PICKER */
 const pickr = Pickr.create({
   el: '#colorBtn',
   theme: 'nano',
@@ -164,17 +160,13 @@ const pickr = Pickr.create({
   }
 });
 
-/* 🔥 핵심: 파란 줄까지 같이 변경 */
-pickr.on('change', (color) => {
+pickr.on('save', (color) => {
   selectedColor = color.toHEXA().toString().replace("#", "");
-  const hex = "#" + selectedColor;
-
-  colorBtn.style.background = hex;
-  preview.style.borderLeft = `4px solid ${hex}`;
-  pTitle.style.color = hex;
+  colorBtn.style.background = "#" + selectedColor;
+  preview.style.borderLeftColor = "#" + selectedColor;
+  pickr.hide();
 });
 
-/* SEND */
 async function send() {
   const mode = document.querySelector('input[name="mode"]:checked').value;
 
