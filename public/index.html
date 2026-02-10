@@ -70,19 +70,23 @@ button {
   margin-top:10px;
 }
 
-/* 🔧 Send 버튼 정렬 고정 */
-.send-btn {
-  width:100%;
-  box-sizing:border-box;
-  margin-top:6px;
+.left {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
+
+.send-btn {
+  margin-top: auto;
+}
+
 </style>
 </head>
 
 <body>
 <div class="container">
 
-  <div>
+  <div class="left">
     <input id="webhook" placeholder="Webhook URL">
 
     <div class="mode">
@@ -192,3 +196,4 @@ async function send() {
 
 </body>
 </html>
+
