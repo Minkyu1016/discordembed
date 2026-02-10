@@ -8,34 +8,16 @@ export default async function handler(req, res) {
     description,
     image,
     color,
-    message,
-    replyUrl,
-    replyMessage
+    message
   } = req.body;
 
   let payload;
 
   if (mode === "message") {
-    payload = { content: message };
-  }
-
-  else if (mode === "reply") {
-    // 메시지 URL 파싱
-    // https://discord.com/channels/GUILD/CHANNEL/MESSAGE
-    const parts = replyUrl.split("/");
-    const channel_id = parts.at(-2);
-    const message_id = parts.at(-1);
-
     payload = {
-      content: replyMessage,
-      message_reference: {
-        channel_id,
-        message_id
-      }
+      content: message
     };
-  }
-
-  else {
+  } else {
     payload = {
       embeds: [{
         title,
