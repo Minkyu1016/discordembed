@@ -166,8 +166,12 @@ const pickr = Pickr.create({
 
 pickr.on('save', (color) => {
   selectedColor = color.toHEXA().toString().replace("#", "");
-  colorBtn.style.background = "#" + selectedColor;
-  preview.style.borderLeftColor = "#" + selectedColor;
+  const hex = "#" + selectedColor;
+
+  colorBtn.style.background = hex;
+  preview.style.borderLeftColor = hex;
+  pTitle.style.color = hex; 
+
   pickr.hide();
 });
 
@@ -196,4 +200,5 @@ async function send() {
 
 </body>
 </html>
+
 
