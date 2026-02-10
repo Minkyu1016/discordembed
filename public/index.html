@@ -1,62 +1,144 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Discord Embed Sender</title>
+<meta charset="UTF-8">
+<title>Discord Message / Embed Sender</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+
+<style>
+body {
+  background:#0f0f14;
+  color:#fff;
+  font-family: Arial, sans-serif;
+  display:flex;
+  justify-content:center;
+  padding:40px;
+}
+.container {
+  display:grid;
+  grid-template-columns: 360px 360px;
+  gap:30px;
+}
+input, textarea, button {
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  background:#1e1e2e;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:6px;
+}
+button {
+  background:#5865f2;
+  font-weight:bold;
+  border:none;
+}
+.mode {
+  display:flex;
+  gap:15px;
+  margin-bottom:10px;
+}
+.hidden { display:none; }
+.embed {
+  background:#2b2d31;
+  border-left:4px solid #5865f2;
+  padding:12px;
+  border-radius:6px;
+}
+</style>
 </head>
+
 <body>
+<div class="container">
 
-<input id="webhook" placeholder="Webhook URL">
+<div>
+  <input id="webhook" placeholder="Webhook URL">
 
-<select id="mode">
-  <option value="message">message</option>
-  <option value="embed">embed</option>
-  <option value="reply">reply</option>
-</select>
+  <div class="mode">
+    <label><input type="radio" name="mode" value="embed" checked> Embed</label>
+    <label><input type="radio" name="mode" value="message"> Message</label>
+    <label><input type="radio" name="mode" value="reply"> Reply</label>
+  </div>
 
-<!-- 기존 message -->
-<textarea id="message" placeholder="Message content"></textarea>
+  <div id="embedSettings">
+    <input id="title" placeholder="Embed Title">
+    <textarea id="description" placeholder="Embed Description"></textarea>
+    <input id="image" placeholder="Embed Image URL">
+    <button id="colorBtn">Choose Color</button>
+  </div>
 
-<!-- 기존 embed -->
-<input id="title" placeholder="Embed title">
-<textarea id="description" placeholder="Embed description"></textarea>
-<input id="color" placeholder="Embed color (hex)">
-<input id="image" placeholder="Embed image URL">
+  <div id="messageSettings" class="hidden">
+    <textarea id="message" placeholder="Plain message"></textarea>
+  </div>
 
-<!-- 🔽 reply 추가 (이것만 추가됨) -->
-<input id="replyUrl" placeholder="Reply Message URL">
-<textarea id="replyMessage" placeholder="Reply Message Content"></textarea>
+  <!-- ✅ reply 추가 -->
+  <div id="replySettings" class="hidden">
+    <input id="replyUrl" placeholder="Reply Message URL">
+    <textarea id="replyMessage" placeholder="Reply Message Content"></textarea>
+  </div>
 
-<button onclick="send()">Send</button>
+  <button onclick="send()">Send</button>
+</div>
+
+<div class="embed" id="preview">
+  <div id="pTitle">Title</div>
+  <div id="pDesc">Description</div>
+</div>
+
+</div>
 
 <script>
-async function send() {
-  const body = {
-    webhook: document.getElementById("webhook").value,
-    mode: document.getElementById("mode").value,
+let selectedColor = "5865F2";
 
-    // 기존
-    message: document.getElementById("message").value,
-    title: document.getElementById("title").value,
-    description: document.getElementById("description").value,
-    color: document.getElementById("color").value,
-    image: document.getElementById("image").value,
-
-    // reply 전용
-    replyUrl: document.getElementById("replyUrl").value,
-    replyMessage: document.getElementById("replyMessage").value
+document.querySelectorAll('input[name="mode"]').forEach(radio => {
+  radio.onchange = () => {
+    embedSettings.classList.toggle("hidden", radio.value !== "embed");
+    messageSettings.classList.toggle("hidden", radio.value !== "message");
+    replySettings.classList.toggle("hidden", radio.value !== "reply");
+    preview.style.display = radio.value === "embed" ? "block" : "none";
   };
+});
 
-  const res = await fetch("/api/send", {
+const pickr = Pickr.create({
+  el: '#colorBtn',
+  theme: 'nano',
+  default: '#5865F2',
+  components: {
+    preview: true,
+    hue: true,
+    interaction: { hex: true, save: true }
+  }
+});
+
+pickr.on('save', c => {
+  selectedColor = c.toHEXA().toString().replace("#", "");
+  preview.style.borderLeftColor = "#" + selectedColor;
+  pickr.hide();
+});
+
+async function send() {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+
+  await fetch("/api/send", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify({
+      mode,
+      webhook: webhook.value,
+      title: title?.value,
+      description: description?.value,
+      image: image?.value,
+      color: selectedColor,
+      message: message?.value,
+      replyUrl: replyUrl?.value,
+      replyMessage: replyMessage?.value
+    })
   });
 
-  const data = await res.json();
-  alert(data.success ? "전송 완료" : data.error);
+  alert("✅ 전송 완료");
 }
 </script>
-
 </body>
 </html>
