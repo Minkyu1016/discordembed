@@ -16,13 +16,17 @@ body {
   justify-content:center;
   padding:40px;
 }
+
 .container {
   display:grid;
   grid-template-columns: 360px 360px;
   gap:30px;
+  align-items:flex-start;
 }
+
 input, textarea, button {
   width:100%;
+  box-sizing:border-box;
   padding:10px;
   margin-bottom:10px;
   background:#1e1e2e;
@@ -30,17 +34,24 @@ input, textarea, button {
   color:#fff;
   border-radius:6px;
 }
+
 button {
   background:#5865f2;
   font-weight:bold;
   border:none;
+  cursor:pointer;
 }
+
 .mode {
   display:flex;
   gap:15px;
   margin-bottom:10px;
 }
-.hidden { display:none; }
+
+.hidden {
+  display:none;
+}
+
 .embed {
   background:#2b2d31;
   border-left:4px solid #5865f2;
@@ -48,62 +59,88 @@ button {
   border-radius:6px;
 }
 
-.send-btn {
-  width: 100%;
-  box-sizing: border-box;
+.embed-title {
+  font-weight:bold;
+  margin-bottom:6px;
 }
 
+.embed-image img {
+  max-width:100%;
+  border-radius:4px;
+  margin-top:10px;
+}
+
+/* 🔧 Send 버튼 정렬 고정 */
+.send-btn {
+  width:100%;
+  box-sizing:border-box;
+  margin-top:6px;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<div>
-  <input id="webhook" placeholder="Webhook URL">
+  <div>
+    <input id="webhook" placeholder="Webhook URL">
 
-  <div class="mode">
-    <label><input type="radio" name="mode" value="embed" checked> Embed</label>
-    <label><input type="radio" name="mode" value="message"> Message</label>
-    <label><input type="radio" name="mode" value="reply"> Reply</label>
+    <div class="mode">
+      <label><input type="radio" name="mode" value="embed" checked> Embed</label>
+      <label><input type="radio" name="mode" value="message"> Message</label>
+      <label><input type="radio" name="mode" value="reply"> Reply</label>
+    </div>
+
+    <!-- Embed -->
+    <div id="embedSettings">
+      <input id="title" placeholder="Embed Title">
+      <textarea id="description" placeholder="Embed Description"></textarea>
+      <input id="image" placeholder="Embed Image URL">
+      <button id="colorBtn" type="button">Choose Color</button>
+    </div>
+
+    <!-- Message -->
+    <div id="messageSettings" class="hidden">
+      <textarea id="message" placeholder="Plain message (no embed)"></textarea>
+    </div>
+
+    <!-- Reply -->
+    <div id="replySettings" class="hidden">
+      <input id="replyUrl" placeholder="Reply Message URL">
+      <textarea id="replyMessage" placeholder="Reply Message Content"></textarea>
+    </div>
+
+    <button class="send-btn" onclick="send()">Send</button>
   </div>
 
-  <div id="embedSettings">
-    <input id="title" placeholder="Embed Title">
-    <textarea id="description" placeholder="Embed Description"></textarea>
-    <input id="image" placeholder="Embed Image URL">
-    <button id="colorBtn">Choose Color</button>
+  <div class="embed" id="preview">
+    <div class="embed-title" id="pTitle">Title</div>
+    <div id="pDesc">Description</div>
+    <div class="embed-image" id="pImg"></div>
   </div>
-
-  <div id="messageSettings" class="hidden">
-    <textarea id="message" placeholder="Plain message"></textarea>
-  </div>
-
-  <!-- ✅ reply 추가 -->
-  <div id="replySettings" class="hidden">
-    <input id="replyUrl" placeholder="Reply Message URL">
-    <textarea id="replyMessage" placeholder="Reply Message Content"></textarea>
-  </div>
-
-  <button onclick="send()">Send</button>
-</div>
-
-<div class="embed" id="preview">
-  <div id="pTitle">Title</div>
-  <div id="pDesc">Description</div>
-</div>
 
 </div>
 
 <script>
 let selectedColor = "5865F2";
 
+function updatePreview() {
+  pTitle.innerText = title.value || "Title";
+  pDesc.innerText = description.value || "Description";
+  pImg.innerHTML = image.value ? `<img src="${image.value}">` : "";
+}
+
+document.querySelectorAll("#embedSettings input, #embedSettings textarea")
+  .forEach(el => el.oninput = updatePreview);
+
 document.querySelectorAll('input[name="mode"]').forEach(radio => {
   radio.onchange = () => {
-    embedSettings.classList.toggle("hidden", radio.value !== "embed");
-    messageSettings.classList.toggle("hidden", radio.value !== "message");
-    replySettings.classList.toggle("hidden", radio.value !== "reply");
-    preview.style.display = radio.value === "embed" ? "block" : "none";
+    const mode = radio.value;
+
+    embedSettings.classList.toggle("hidden", mode !== "embed");
+    messageSettings.classList.toggle("hidden", mode !== "message");
+    replySettings.classList.toggle("hidden", mode !== "reply");
+    preview.style.display = mode === "embed" ? "block" : "none";
   };
 });
 
@@ -113,13 +150,19 @@ const pickr = Pickr.create({
   default: '#5865F2',
   components: {
     preview: true,
+    opacity: false,
     hue: true,
-    interaction: { hex: true, save: true }
+    interaction: {
+      hex: true,
+      input: true,
+      save: true
+    }
   }
 });
 
-pickr.on('save', c => {
-  selectedColor = c.toHEXA().toString().replace("#", "");
+pickr.on('save', (color) => {
+  selectedColor = color.toHEXA().toString().replace("#", "");
+  colorBtn.style.background = "#" + selectedColor;
   preview.style.borderLeftColor = "#" + selectedColor;
   pickr.hide();
 });
@@ -131,8 +174,8 @@ async function send() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      mode,
       webhook: webhook.value,
+      mode,
       title: title?.value,
       description: description?.value,
       image: image?.value,
@@ -143,9 +186,9 @@ async function send() {
     })
   });
 
-  alert("✅ 전송 완료");
+  alert("✅ 전송되었습니다");
 }
 </script>
+
 </body>
 </html>
-
