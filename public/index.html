@@ -16,14 +16,12 @@ body {
   justify-content:center;
   padding:40px;
 }
-
 .container {
   display:grid;
   grid-template-columns: 360px 360px;
   gap:30px;
   align-items:flex-start;
 }
-
 input, textarea, button {
   width:100%;
   box-sizing:border-box;
@@ -34,46 +32,36 @@ input, textarea, button {
   color:#fff;
   border-radius:6px;
 }
-
 button {
   background:#5865f2;
   font-weight:bold;
   border:none;
   cursor:pointer;
 }
-
 .mode {
   display:flex;
   gap:15px;
   margin-bottom:10px;
 }
-
 .hidden {
   display:none;
 }
-
 .embed {
   background:#2b2d31;
   border-left:4px solid #5865f2;
   padding:12px;
   border-radius:6px;
 }
-
 .embed-title {
   font-weight:bold;
   margin-bottom:6px;
 }
-
 .embed-image img {
   max-width:100%;
   border-radius:4px;
   margin-top:10px;
 }
-
-/* 🔧 Send 버튼 정렬 고정 */
 .send-btn {
-  width:100%;
-  box-sizing:border-box;
   margin-top:6px;
 }
 </style>
@@ -88,26 +76,17 @@ button {
     <div class="mode">
       <label><input type="radio" name="mode" value="embed" checked> Embed</label>
       <label><input type="radio" name="mode" value="message"> Message</label>
-      <label><input type="radio" name="mode" value="reply"> Reply</label>
     </div>
 
-    <!-- Embed -->
     <div id="embedSettings">
       <input id="title" placeholder="Embed Title">
       <textarea id="description" placeholder="Embed Description"></textarea>
       <input id="image" placeholder="Embed Image URL">
-      <button id="colorBtn" type="button">Choose Color</button>
+      <button id="colorBtn">Choose Color</button>
     </div>
 
-    <!-- Message -->
     <div id="messageSettings" class="hidden">
       <textarea id="message" placeholder="Plain message (no embed)"></textarea>
-    </div>
-
-    <!-- Reply -->
-    <div id="replySettings" class="hidden">
-      <input id="replyUrl" placeholder="Reply Message URL">
-      <textarea id="replyMessage" placeholder="Reply Message Content"></textarea>
     </div>
 
     <button class="send-btn" onclick="send()">Send</button>
@@ -129,18 +108,15 @@ function updatePreview() {
   pDesc.innerText = description.value || "Description";
   pImg.innerHTML = image.value ? `<img src="${image.value}">` : "";
 }
-
 document.querySelectorAll("#embedSettings input, #embedSettings textarea")
   .forEach(el => el.oninput = updatePreview);
 
 document.querySelectorAll('input[name="mode"]').forEach(radio => {
   radio.onchange = () => {
-    const mode = radio.value;
-
-    embedSettings.classList.toggle("hidden", mode !== "embed");
-    messageSettings.classList.toggle("hidden", mode !== "message");
-    replySettings.classList.toggle("hidden", mode !== "reply");
-    preview.style.display = mode === "embed" ? "block" : "none";
+    const embed = radio.value === "embed" && radio.checked;
+    embedSettings.classList.toggle("hidden", !embed);
+    messageSettings.classList.toggle("hidden", embed);
+    preview.style.display = embed ? "block" : "none";
   };
 });
 
@@ -174,15 +150,13 @@ async function send() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      webhook: webhook.value,
       mode,
+      webhook: webhook.value,
       title: title?.value,
       description: description?.value,
       image: image?.value,
       color: selectedColor,
-      message: message?.value,
-      replyUrl: replyUrl?.value,
-      replyMessage: replyMessage?.value
+      message: message?.value
     })
   });
 
@@ -192,3 +166,4 @@ async function send() {
 
 </body>
 </html>
+
