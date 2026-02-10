@@ -6,13 +6,13 @@ export default async function handler(req, res) {
   const {
     webhook,
     mode,
-    message,
+
+    // 기존 UI 필드들
+    message,        // Message content
     title,
     description,
     color,
-    image,
-    replyUrl,
-    replyMessage
+    image           // Embed image URL → reply 모드에선 Message URL로 사용
   } = req.body;
 
   if (!webhook || !mode) {
@@ -21,8 +21,9 @@ export default async function handler(req, res) {
 
   let payload;
 
+  // Discord 메시지 URL 파싱
   function parseDiscordMessageUrl(url) {
-    const match = url.match(
+    const match = url?.match(
       /https:\/\/discord\.com\/channels\/\d+\/(\d+)\/(\d+)/
     );
     if (!match) return null;
@@ -49,14 +50,19 @@ export default async function handler(req, res) {
     };
 
   } else if (mode === "reply") {
-    const parsed = parseDiscordMessageUrl(replyUrl);
+    // 👇 UI 변경 없이 재활용
+    // message  -> 답장 내용
+    // image    -> 메시지 URL
+    const parsed = parseDiscordMessageUrl(image);
 
     if (!parsed) {
-      return res.status(400).json({ error: "Invalid Discord message URL" });
+      return res.status(400).json({
+        error: "Reply mode requires Discord message URL in 'Embed image URL' field"
+      });
     }
 
     payload = {
-      content: replyMessage,
+      content: message,
       message_reference: {
         message_id: parsed.messageId,
         channel_id: parsed.channelId
@@ -80,6 +86,7 @@ export default async function handler(req, res) {
     }
 
     res.json({ success: true });
+
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
